@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30503.244
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{40B348CB-7535-4C0D-84E4-042178920F25}"
+ProjectSection(SolutionItems) = preProject
+	..\build.cake = ..\build.cake
+	..\config.yml = ..\config.yml
+	..\functions.cake = ..\functions.cake
+	..\global.json = ..\global.json
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{00D702A4-F6C9-4BFB-B225-98836896F89F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PomGang", "PomGang\PomGang.csproj", "{4A82E256-700A-4726-BD73-6974062D9377}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{6F494C91-0391-4264-A818-3420F12881A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PomGang.Tests", "PomGang.Tests\PomGang.Tests.csproj", "{672BC49D-129A-434A-831E-00AE2B885D08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PomGang.Simulator", "PomGang.Simulator\PomGang.Simulator.csproj", "{D5899802-60B3-4741-B443-6954A7296D6B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4A82E256-700A-4726-BD73-6974062D9377} = {00D702A4-F6C9-4BFB-B225-98836896F89F}
+		{672BC49D-129A-434A-831E-00AE2B885D08} = {6F494C91-0391-4264-A818-3420F12881A2}
+		{D5899802-60B3-4741-B443-6954A7296D6B} = {00D702A4-F6C9-4BFB-B225-98836896F89F}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{672BC49D-129A-434A-831E-00AE2B885D08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{672BC49D-129A-434A-831E-00AE2B885D08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{672BC49D-129A-434A-831E-00AE2B885D08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{672BC49D-129A-434A-831E-00AE2B885D08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5899802-60B3-4741-B443-6954A7296D6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5899802-60B3-4741-B443-6954A7296D6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5899802-60B3-4741-B443-6954A7296D6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5899802-60B3-4741-B443-6954A7296D6B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

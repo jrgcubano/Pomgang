@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <TargetFramework>net5.0</TargetFramework>
+      <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="$(SystemReactivePackageVersion)" />
+    <PackageReference Include="System.Reactive.Core" Version="$(SystemReactivePackageVersion)" />
+    <PackageReference Include="System.Reactive.Interfaces" Version="$(SystemReactivePackageVersion)" />
+    <PackageReference Include="System.Reactive.Linq" Version="$(SystemReactivePackageVersion)" />
+    <PackageReference Include="System.Reactive.PlatformServices" Version="$(SystemReactivePackageVersion)" />
+    <PackageReference Include="Microsoft.Reactive.Testing" Version="$(SystemReactivePackageVersion)" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <AnnotatedReferenceAssemblyVersion>3.0.0</AnnotatedReferenceAssemblyVersion>
+    <GenerateNullableAttributes>False</GenerateNullableAttributes>
+  </PropertyGroup>
+
+</Project>

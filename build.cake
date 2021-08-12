@@ -1,235 +1,190 @@
-#addin "Cake.FileHelpers"
-#addin "nuget:?package=Cake.Coveralls"
-#tool "nuget:?package=OpenCover"
-#tool "nuget:?package=ReportGenerator"
-#tool "nuget:?package=xunit.runner.console"
-#tool "nuget:?package=coveralls.io"
+#addin nuget:?package=YamlDotNet&version=8.1.2
+#addin nuget:?package=System.Xml.XDocument&version=4.3.0
+#addin nuget:?package=Cake.MinVer&version=1.0.0-rc0001
+#addin nuget:?package=Cake.Yaml&version=3.1.1
+#addin nuget:?package=Cake.Docker&version=0.11.1
 
-var target = Argument<string>("target", "Default");
+#load "./functions.cake"
 
-var	isTagged = (
-	BuildSystem.AppVeyor.Environment.Repository.Tag.IsTag &&
-	!string.IsNullOrWhiteSpace(BuildSystem.AppVeyor.Environment.Repository.Tag.Name)
-);
+var basePath = "./src";
+var organization = "appyway";
+var artifactsPath = Context.Directory("./.artifacts");
+var target = Argument("target", "Default");
+var configuration = Argument("configuration", "Release");
+var configFilePath = "config.yml";
+var taskConfigManager = new ProjectTaskConfigurationManager();
+var projectDescriptors = ProjectLoader.Load(Context, configFilePath, basePath, configuration).Projects;
+var version = MinVer(settings => settings
+    .WithDefaultPreReleasePhase("preview")
+    .WithVerbosity(MinVerVerbosity.Info));
 
-var configuration =
-    HasArgument("Configuration") ? Argument<string>("Configuration") :
-    EnvironmentVariable("Configuration") != null ? EnvironmentVariable("Configuration") :
-    "Release";
-var preReleaseSuffix =
-    HasArgument("PreReleaseSuffix") ? Argument<string>("PreReleaseSuffix") :
-    isTagged ? null :
-    EnvironmentVariable("PreReleaseSuffix") != null ? EnvironmentVariable("PreReleaseSuffix") :
-    "beta";
-var buildNumber =
-    HasArgument("BuildNumber") ? Argument<int>("BuildNumber") :
-    AppVeyor.IsRunningOnAppVeyor ? AppVeyor.Environment.Build.Number :
-    TravisCI.IsRunningOnTravisCI ? TravisCI.Environment.Build.BuildNumber :
-    EnvironmentVariable("BuildNumber") != null ? int.Parse(EnvironmentVariable("BuildNumber")) :
-    0;
+////////////////////////////////////////////////////////////////
+// Setup
 
-var isLocalBuild = BuildSystem.IsLocalBuild;
-var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
-var isRunningOnAppVeyor = AppVeyor.IsRunningOnAppVeyor;
+Setup((context) =>
+{
+    Information("AppyWay");
+    Information($"Version: {version.Version}");
+});
 
-var nugetApiKey =
-    HasArgument("nugetApiKey") ? Argument<string>("nugetApiKey") : EnvironmentVariable("NUGET_API_KEY");
-var githubApiKey = EnvironmentVariable("GITHUB_API_KEY");
-var coverallsApiKey = EnvironmentVariable("COVERALLS_API_KEY");
-
-var testCoverageFilter = "+[Pomodoro]* -[Pomodoro.Console]*";
-var testCoverageExcludeByAttribute = "*.ExcludeFromCodeCoverage*";
-var testCoverageExcludeByFile = "*/*Designer.cs;*/*AssemblyInfo.cs";
-var restoreSources = new [] {
-     "https://www.myget.org/F/xunit/api/v3/index.json",
-     "https://dotnet.myget.org/F/dotnet-core/api/v3/index.json",
-     "https://dotnet.myget.org/F/cli-deps/api/v3/index.json",
-     "https://api.nuget.org/v3/index.json"
-};
-var githubOwner = "jrgcubano";
-var githubRepo = "Pomodoro";
-var githubRawUri = "http://raw.githubusercontent.com";
-
-var outputDir = Directory("./build");
-var nugetDir = outputDir + Directory("nuget");
-var testResultsDir = outputDir + Directory("test-results");
-var coverageFilePath = testResultsDir + File("coverage.xml");
+////////////////////////////////////////////////////////////////
+// Tasks
 
 Task("Clean")
-	.Does(() => 
-    {        
-        CleanDirectories(outputDir);
-        DeleteDirectories(GetDirectories("**/bin"), true);
-        DeleteDirectories(GetDirectories("**/obj"), true);
-
-        if(!DirectoryExists(outputDir))
-            CreateDirectory(outputDir);
-        if(!DirectoryExists(testResultsDir))
-            CreateDirectory(testResultsDir);        
-        if(!DirectoryExists(nugetDir))
-            CreateDirectory(nugetDir);    
-	});
-
+    .Does(context =>
+{
+    context.CleanDirectory(artifactsPath);
+});
 
 Task("Restore")
-    .IsDependentOn("Clean")
-    .Does(() => 
-    {        
-        var settings = new DotNetCoreRestoreSettings {
-            Sources = restoreSources
-        };
-        var srcProjects = GetFiles("./src/**/*.csproj");
-        var testProjects = GetFiles("./test/**/*.csproj");
-        foreach(var project in srcProjects)
+    .Does(() =>
+{
+    DotNetCoreRestore(basePath,
+        new DotNetCoreRestoreSettings
         {
-            DotNetCoreRestore(project.GetDirectory().FullPath, settings);
-        }    
-        foreach(var project in testProjects)
-        {
-            DotNetCoreRestore(project.GetDirectory().FullPath, settings);
-        }    
-    });
+            Verbosity = DotNetCoreVerbosity.Minimal
+        });
+});
 
- Task("Build")
+Task("Build-Project")
     .IsDependentOn("Restore")
-    .Does(() =>
-    { 
-        var srcProjects = GetFiles("./src/**/*.csproj");
-        var testProjects = GetFiles("./test/**/*.csproj");
-        foreach(var project in srcProjects)
-        {
-            DotNetCoreBuild(
-                project.GetDirectory().FullPath,
-                new DotNetCoreBuildSettings()
-                {                
-                    Configuration = configuration
-                });
-        }           
-        foreach(var project in testProjects)
-        {
-            DotNetCoreBuild(
-                project.GetDirectory().FullPath,
-                new DotNetCoreBuildSettings()
-                {          
-                    Configuration = configuration
-                });
-        }           
-    });
-
-Task("Test")
-    .IsDependentOn("Build")
-    .Does(() =>
-    {        
-        var projects = GetFiles("./test/**/*.csproj");
-        foreach(var project in projects)
-        {
-            // var testXmlPath = testResultsDir.Path.CombineWithFilePath(project.GetFilenameWithoutExtension()).FullPath + ".trx";                    
-            var testXmlPathAbs = MakeAbsolute(testResultsDir)
-                .CombineWithFilePath(
-                    project.GetFilenameWithoutExtension()).FullPath + ".trx";
-            Information("File Abs: " + testXmlPathAbs);
-            DotNetCoreTest(
-                project.ToString(),
-                new DotNetCoreTestSettings()
-                {
-                    // ArgumentCustomization = args => args.Append("-xml").Append(testXmlPath),
-                    // ArgumentCustomization = args => args.Append("--logger \"trx;LogFileName=" + testXmlPathAbs + "\""),
-                    Configuration = configuration,
-                    NoBuild = true                    
-                });
-        } 
-    });
-
-Task("Test-Coverage")
-	.IsDependentOn("Build")
-	.Does(() =>
-{    
-    var projects = GetFiles("./test/**/*.csproj");
-    foreach(var project in projects)
+    .Does(context =>
+{
+    foreach(var projectDescriptor in projectDescriptors)
     {
-        var testXmlPathAbs = MakeAbsolute(testResultsDir)
-                .CombineWithFilePath(
-                    project.GetFilenameWithoutExtension()).FullPath + ".trx";    
-        Action<ICakeContext> testAction = tool => tool.DotNetCoreTest(
-            project.ToString(), new DotNetCoreTestSettings {
-                NoBuild = true,
-                Verbose = false,
-                Configuration = configuration,
-                ArgumentCustomization = args => args.Append("--logger \"trx;LogFileName=" + testXmlPathAbs + "\"")
-            }
-        );    
-        OpenCover(testAction,
-            coverageFilePath,
-            new OpenCoverSettings {
-                ReturnTargetCodeOffset = 0,
-                ArgumentCustomization = args => args.Append("-mergeoutput -oldStyle")
-            }
-            .WithFilter(testCoverageFilter)
-            .ExcludeByAttribute(testCoverageExcludeByAttribute)
-            .ExcludeByFile(testCoverageExcludeByFile));
+        if (!taskConfigManager.CanBuild(projectDescriptor.Config)) continue;
+
+        var projectFilePath = projectDescriptor.Document.ProjectFileFullPath;
+
+        DotNetCoreBuild(projectFilePath, new DotNetCoreBuildSettings {
+            Configuration = configuration,
+            NoRestore = true,
+            NoIncremental = context.HasArgument("rebuild"),
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .TreatAllWarningsAs(MSBuildTreatAllWarningsAs.Error)
+        });
     }
 });
 
-Task("Upload-Coverage-Report")
-    .WithCriteria(() => FileExists(coverageFilePath))
-    .WithCriteria(() => !isLocalBuild)
-    .WithCriteria(() => !isPullRequest)
-    .IsDependentOn("Test-Coverage")
-    .Does(() =>
+Task("Test")
+    .IsDependentOn("Build-Project")
+    .Does(context =>
 {
-    CoverallsIo(coverageFilePath, new CoverallsIoSettings()
+    foreach(var projectDescriptor in projectDescriptors)
     {
-        RepoToken = coverallsApiKey
-    });
+        if (!taskConfigManager.CanTest(projectDescriptor.Config)) continue;
+
+        var projectFilePath = projectDescriptor.Document.ProjectFileFullPath;
+
+        DotNetCoreTest(projectFilePath, new DotNetCoreTestSettings {
+            Configuration = configuration,
+            NoRestore = true,
+            NoBuild = true,
+            TestAdapterPath = ".",
+            Loggers = new string[] {
+                // $"xunit;LogFilePath={MakeAbsolute(artifactsPath).FullPath}/xunit-{projectDescriptor.Config.Name}.xml",
+                "GitHubActions;report-warnings=false"
+            },
+            Verbosity = DotNetCoreVerbosity.Quiet
+        });
+    }
 });
 
 Task("Package")
-    .IsDependentOn("Build")
-    .Does(() => 
-    {
-        string versionSuffix = null;
-        if (!string.IsNullOrEmpty(preReleaseSuffix))
-        {
-            versionSuffix = preReleaseSuffix + "-" + buildNumber.ToString("D4");
-        }
-        var srcProjects = GetFiles("./src/Pomodoro/*.csproj");
-        foreach (var project in srcProjects)
-        {
-            DotNetCorePack(
-                project.GetDirectory().FullPath,
-                new DotNetCorePackSettings()
-                {
-                    Configuration = configuration,
-                    OutputDirectory = nugetDir,
-                    VersionSuffix = versionSuffix,
-                    NoBuild = true,
-                    Verbose = false		            
-                });
-        }
-    });
-
-Task("Publish-Package")
-    .WithCriteria(() => !isLocalBuild)
-    .WithCriteria(() => !isPullRequest)
-    .WithCriteria(() => isTagged)
-    .IsDependentOn("Package")
-    .Does(() =>
+    .IsDependentOn("Test")
+    .Does(context =>
 {
-    var packages = GetFiles(nugetDir.Path.FullPath + "/*.nupkg");
-    NuGetPush(packages, new NuGetPushSettings {
-        Source = "https://www.nuget.org/api/v2/package",
-        ApiKey = nugetApiKey 
-    });
+    foreach(var projectDescriptor in projectDescriptors)
+    {
+        if (!taskConfigManager.CanPack(projectDescriptor.Config)) continue;
+
+        var projectFilePath = projectDescriptor.Document.ProjectFileFullPath;
+
+        context.DotNetCorePack(projectFilePath, new DotNetCorePackSettings {
+            Configuration = configuration,
+            NoRestore = true,
+            NoBuild = true,
+            OutputDirectory = artifactsPath,
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .TreatAllWarningsAs(MSBuildTreatAllWarningsAs.Error)
+        });
+    }
 });
 
-Task("DefaultCI")
-    //.IsDependentOn("Test-Coverage")
-    //.IsDependentOn("Upload-Coverage-Report")
-    .IsDependentOn("Test")
+Task("Publish-Package-GitHub")
+    .WithCriteria(ctx => BuildSystem.IsRunningOnGitHubActions, "Not running on GitHub Actions")
     .IsDependentOn("Package")
-    .IsDependentOn("Publish-Package");
+    .Does(context =>
+{
+    var apiKey = Argument<string>("github-key", null);
+    if(string.IsNullOrWhiteSpace(apiKey)) {
+        throw new CakeException("No GitHub API key was provided.");
+    }
 
-Task("Default") 
+    var exitCode = 0;
+    foreach(var projectDescriptor in projectDescriptors)
+    {
+        if (!taskConfigManager.CanPack(projectDescriptor.Config)) continue;
+
+        var nugetPkgFilePath = context.BuildNugetPackagePath(artifactsPath, projectDescriptor, version.Version);
+
+        context.Information("Publishing {0} to Github", nugetPkgFilePath);
+        exitCode += StartProcess("dotnet",
+            new ProcessSettings {
+                Arguments = new ProcessArgumentBuilder()
+                    .Append("gpr")
+                    .Append("push")
+                    .AppendQuoted(nugetPkgFilePath)
+                    .AppendSwitchSecret("-k", " ", apiKey)
+            }
+        );
+    }
+
+    if(exitCode != 0)
+    {
+        throw new CakeException("Could not push GitHub packages.");
+    }
+});
+
+Task("Publish-Package-NuGet")
+    .WithCriteria(ctx => BuildSystem.IsRunningOnGitHubActions, "Not running on GitHub Actions")
+    .IsDependentOn("Package")
+    .Does(context =>
+{
+    var apiKey = Argument<string>("nuget-key", null);
+    if(string.IsNullOrWhiteSpace(apiKey)) {
+        throw new CakeException("No NuGet API key was provided.");
+    }
+
+    foreach(var projectDescriptor in projectDescriptors)
+    {
+        if (!taskConfigManager.CanPack(projectDescriptor.Config)) continue;
+
+        var nugetPkgFilePath = context.BuildNugetPackagePath(artifactsPath, projectDescriptor, version.Version);
+
+        context.Information("Publishing {0} to Nuget", nugetPkgFilePath);
+
+        DotNetCoreNuGetPush(nugetPkgFilePath, new DotNetCoreNuGetPushSettings
+        {
+            Source = "https://api.nuget.org/v3/index.json",
+            ApiKey = apiKey,
+        });
+    }
+});
+
+////////////////////////////////////////////////////////////////
+// Targets
+
+Task("Publish")
+    .IsDependentOn("Publish-Package-GitHub")
+    .IsDependentOn("Publish-Package-NuGet");
+
+Task("Default")
+    .IsDependentOn("Clean")
+    .IsDependentOn("Build-Project")
     .IsDependentOn("Package");
 
-RunTarget(target);
+////////////////////////////////////////////////////////////////
+// Execution
+
+RunTarget(target)
