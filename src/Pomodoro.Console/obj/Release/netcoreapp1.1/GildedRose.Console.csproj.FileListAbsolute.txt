@@ -1,0 +1,10 @@
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/bin/Release/netcoreapp1.1/GildedRose.Console.deps.json
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/bin/Release/netcoreapp1.1/GildedRose.Console.runtimeconfig.json
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/bin/Release/netcoreapp1.1/GildedRose.Console.runtimeconfig.dev.json
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/bin/Release/netcoreapp1.1/GildedRose.Console.dll
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/bin/Release/netcoreapp1.1/GildedRose.Console.pdb
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/bin/Release/netcoreapp1.1/GildedRose.dll
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/bin/Release/netcoreapp1.1/GildedRose.pdb
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/obj/Release/netcoreapp1.1/GildedRose.Console.AssemblyInfo.cs
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/obj/Release/netcoreapp1.1/GildedRose.Console.dll
+/Users/jrodriguez/Projects/challenges/katas/csharp/GildedRose/src/GildedRose.Console/obj/Release/netcoreapp1.1/GildedRose.Console.pdb

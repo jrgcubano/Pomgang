@@ -1,0 +1,51 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v1.1",
+    "signature": "d6e8e8e40fb8aa6c1dbc78c6bffc02cce64113ff"
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v1.1": {
+      "Pomodoro.console/1.0.0": {
+        "dependencies": {
+          "Pomodoro": "1.0.0"
+        },
+        "runtime": {
+          "Pomodoro.Console.dll": {}
+        }
+      },
+      "genesis.ensure/1.0.5": {
+        "runtime": {
+          "lib/netstandard1.0/Genesis.Ensure.dll": {}
+        }
+      },
+      "Pomodoro/1.0.0": {
+        "dependencies": {
+          "Genesis.Ensure": "1.0.5"
+        },
+        "runtime": {
+          "Pomodoro.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Pomodoro.console/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "genesis.ensure/1.0.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-iHeW0zzQmM3Fzl8m8br7r1QHI0I1szrW8q74pWBbCBx3nQKQFZsoqBYhjTjmHMyv7Ry1xwcbeDHosfhX0b3okg==",
+      "path": "genesis.ensure/1.0.5",
+      "hashPath": "genesis.ensure.1.0.5.nupkg.sha512"
+    },
+    "Pomodoro/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

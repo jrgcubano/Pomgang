@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Build">    
+    <NeutralLanguage>en-US</NeutralLanguage>    
+    <TargetFrameworks>netstandard1.6;netcoreapp1.1</TargetFrameworks>  
+    <AssemblyName>Pomodoro</AssemblyName>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+  </PropertyGroup>
+
+   <PropertyGroup Label="Package">
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <Authors>Jorge Rodríguez Galán</Authors>
+    <Product>Pomodoro Kata</Product>
+    <PackageId>Pomodoro</PackageId>
+    <Description>Pomodoro kata with NET CORE</Description>    
+    <Copyright>Copyright © Jorge Rodríguez Galán. All rights Reserved</Copyright>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseUrl>https://github.com/jrgcubano/Pomodoro/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/jrgcubano/Pomodoro</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jrgcubano/Pomodoro.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Pomodoro;Kata;ASP.NET Core;Jorge Rodríguez Galán</PackageTags>
+    <PackageReleaseNotes>Updated to ASP.NET Core</PackageReleaseNotes>  
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Genesis.Ensure" Version="1.0.5" />    
+    <PackageReference Include="System.Reactive" Version="3.0.0" />    
+    <PackageReference Include="System.Reactive.Core" Version="3.0.0" /> 
+    <PackageReference Include="System.Reactive.Interfaces" Version="3.0.0" /> 
+    <PackageReference Include="System.Reactive.Linq" Version="3.0.0" /> 
+    <PackageReference Include="System.Reactive.PlatformServices" Version="3.0.0" />   
+  </ItemGroup>
+  
+</Project>
